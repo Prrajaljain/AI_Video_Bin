@@ -1,0 +1,7 @@
+mediapipe>=0.10.9
+opencv-python>=4.8.0
+numpy>=1.24.0
+
+# Raspberry Pi only — uncomment when installing on the Pi
+# picamera2
+# RPi.GPIO
