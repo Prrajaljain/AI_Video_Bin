@@ -47,6 +47,5 @@ python waste_sorter.py --model best.tflite --mock --source clip.mp4 --output dem
 
 ## 📂 Repository Structure
 - `waste_sorter.py` — detection, routing queue, servo control
-- `best.tflite` — trained detector
 - `requirements.txt` — dependencies
 - `demo.gif` — annotated output
