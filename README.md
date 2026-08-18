@@ -1,33 +1,44 @@
-AI Crowd Monitoring System 👥
+# AI Waste Sorting System 🗑️
 
-📝 Project Overview
+## 📝 Project Overview
+Real-time waste segregation on a Raspberry Pi. A funnel-mounted camera identifies
+each item as metal, paper or plastic, then a rotating drum positions the correct
+bin underneath and a tray releases the item. All inference runs on-device — no
+cloud, no network. 92–96% accuracy across the three classes.
 
-This project focuses on real-time Crowd Detection and Monitoring using Artificial Intelligence. By processing video feeds, the system can estimate crowd density and monitor movement patterns, which is essential for safety and urban planning.
+## 🛠️ Tech Stack
+- **AI/ML:** MediaPipe, TFLite, OpenCV
+- **Vision Logic:** Custom-trained object detector for material classification
+- **Hardware:** Raspberry Pi, two servos on 50 Hz PWM (GPIO 18 / 19)
+- **Version Control:** Git/GitHub
 
-🛠️ Tech Stack
+## ⚙️ How It Works
+1. Item drops through the funnel and settles on the holding tray
+2. Camera classifies it — metal, paper or plastic
+3. Rotating drum turns the matching segment under the tray
+4. Tray releases; item lands in the correct bin
 
-AI/ML: TensorFlow, OpenCV
+Detection and actuation run on separate threads, so the vision pipeline keeps
+running during the ~4-second mechanical cycle.
 
-Vision Logic: Object detection models (like YOLO or CNNs) for person counting
+## 📊 Results
+- 92–96% classification accuracy across classes
+- ~1 item per 4–5 seconds (limited by servo travel, not inference)
+- Fully on-device inference
 
-Version Control: Git/GitHub for collaborative development and portfolio building
+## 🚀 Run It
+```bash
+pip install -r requirements.txt
 
-🚀 Development Roadmap
+# on the Pi
+python waste_sorter.py --model best.tflite
 
-Phase 1: Setup & Data Prep: Establishing the environment and gathering crowd datasets
+# on a laptop, from a recording
+python waste_sorter.py --model best.tflite --mock --source clip.mp4 --output demo.mp4
+```
 
-Phase 2: Model Implementation: Training a detection model to identify individuals in varying light and density
-
-Phase 3: Logic & Analysis: Developing algorithms for density heatmaps and flow tracking
-
-Phase 4: Deployment: Integrating the system for real-time monitoring
-
-📂 Repository Structure
-
-/src: Core Python scripts for video processing and inference.
-
-/models: Trained model weights and configuration files.
-
-/notebooks: Initial research and data analysis.
-
-
+## 📂 Repository Structure
+- `waste_sorter.py` — detection, routing queue, servo control
+- `best.tflite` — trained detector
+- `requirements.txt` — dependencies
+- `demo.gif` — annotated output
