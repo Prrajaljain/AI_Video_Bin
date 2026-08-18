@@ -21,6 +21,14 @@ cloud, no network. 92–96% accuracy across the three classes.
 Detection and actuation run on separate threads, so the vision pipeline keeps
 running during the ~4-second mechanical cycle.
 
+## 📦 Model
+
+The trained detector (`best.tflite`) is not included in this repository —
+institutional project asset. Available for review on request.
+
+To run with your own model, point `--model` at any MediaPipe-compatible
+TFLite object detection file whose labels match the keys in `BIN_ANGLES`.
+
 ## 📊 Results
 - 92–96% classification accuracy across classes
 - ~1 item per 4–5 seconds (limited by servo travel, not inference)
