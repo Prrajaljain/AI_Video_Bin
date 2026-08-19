@@ -34,18 +34,22 @@ TFLite object detection file whose labels match the keys in `BIN_ANGLES`.
 - ~1 item per 4–5 seconds (limited by servo travel, not inference)
 - Fully on-device inference
 
-## 🚀 Run It
-```bash
+🚀 Run It
+
+```
 pip install -r requirements.txt
 
 # on the Pi
-python ai_video_bin.py --model best.tflite
+python waste_sorter.py --model best.tflite
 
 # on a laptop, from a recording
-python ai_video_bin.py --model best.tflite --mock --source clip.mp4 --output demo.mp4
+python waste_sorter.py --model best.tflite --mock --source clip.mp4 --output demo.mp4
 ```
 
-## 📂 Repository Structure
-- `ai_video_bin.py` — detection, routing queue, servo control
-- `requirements.txt` — dependencies
-- `README.md` — documentation
+📂 Repository Structure
+
+* `waste_sorter.py` — detection, routing queue, servo control
+* `requirements.txt` — dependencies
+* `demo.gif` — annotated output
+* `.gitignore` — ignored paths
+* `README.md` — documentation
