@@ -1,3 +1,17 @@
+"""
+AI Waste Sorting — real-time material detection and servo-driven bin routing.
+
+Detection and actuation are decoupled. MediaPipe calls the result callback on its
+own worker thread and expects a prompt return, so the callback only enqueues a
+routing request. A dedicated actuator thread drives the servos. Without the split,
+the vision pipeline stalls for the full ~4s mechanical cycle.
+
+    camera --> detector --> queue(1) --> actuator thread --> servos
+
+Hardware: selector servo on GPIO 18 (rotates drum), release servo on GPIO 19 (tray).
+Run --mock --source clip.mp4 to exercise the pipeline without a Pi.
+"""
+
 from __future__ import annotations
 
 import argparse
