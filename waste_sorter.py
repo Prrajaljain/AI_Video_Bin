@@ -47,18 +47,16 @@ except ImportError:
     PICAMERA_AVAILABLE = False
 
 
-
 SELECTOR_PIN = 18
 RELEASE_PIN = 19
 PWM_FREQ_HZ = 50
 
-
 ANGLE_DIVISOR = 18.0
 DUTY_OFFSET = 3.0
 
-SERVO_SETTLE_S = 0.5  
-RELEASE_HOLD_S = 1.5  
-
+SERVO_SETTLE_S = 0.5
+RELEASE_HOLD_S = 1.5
+COOLDOWN_S = 3.0  # per-material debounce; must exceed the full mechanical cycle
 
 BIN_ANGLES: dict[str, int] = {
     "metal": 0,
@@ -69,7 +67,6 @@ BIN_ANGLES: dict[str, int] = {
 GATE_CLOSED = 0
 GATE_OPEN = 180
 
-
 FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
 FPS_WINDOW = 10
@@ -79,8 +76,6 @@ TEXT = (245, 245, 245)
 MUTED = (165, 165, 165)
 ACCENT = (0, 220, 120)
 BUSY = (60, 170, 250)
-
-
 
 
 class Servos(Protocol):
@@ -94,7 +89,11 @@ class Servos(Protocol):
 
 
 class ServoController:
-    """Drives the bin selector and release gate over hardware PWM."""
+    """Drives the drum selector and release tray over hardware PWM.
+
+    Each servo gets its own PWM channel. Sharing one channel across two pins sends
+    every command to whichever pin owns the channel, silently.
+    """
 
     def __init__(self, selector_pin: int, release_pin: int, freq_hz: int) -> None:
         if not GPIO_AVAILABLE:
@@ -121,10 +120,10 @@ class ServoController:
         return angle / ANGLE_DIVISOR + DUTY_OFFSET
 
     def select_bin(self, angle: int) -> None:
-        """Rotate the chute, wait for it to settle, then cut the pulse train.
+        """Rotate the drum, wait for it to settle, then cut the pulse train.
 
-        Holding a duty cycle indefinitely makes cheap servos hunt and buzz, which
-        draws current and adds vibration to the chute. Dropping to 0% lets them
+        Holding a duty cycle makes cheap servos hunt and buzz, which draws current
+        and vibrates the frame the camera is mounted to. Dropping to 0% lets them
         settle mechanically.
         """
         self._selector.ChangeDutyCycle(self._duty(angle))
@@ -152,12 +151,11 @@ class MockServos:
         time.sleep(SERVO_SETTLE_S)
 
     def release(self) -> None:
-        log.info("[mock] gate open -> hold -> close")
+        log.info("[mock] tray open -> hold -> close")
         time.sleep(RELEASE_HOLD_S)
 
     def close(self) -> None:
         log.info("[mock] servos released")
-
 
 
 @dataclass(frozen=True)
@@ -170,8 +168,8 @@ class Sorter(threading.Thread):
     """Consumes sort requests and drives the servos, one item at a time.
 
     Queue depth is 1 by design. A request arriving mid-cycle is dropped rather
-    than buffered — a stale routing command is worse than a missed one, because
-    by the time it executes the item has already passed the chute.
+    than buffered — a stale routing command is worse than a missed one, because by
+    the time it executes the item has already left the tray.
     """
 
     def __init__(self, servos: Servos) -> None:
@@ -183,8 +181,6 @@ class Sorter(threading.Thread):
         self._busy = False
         self._sorted: dict[str, int] = {name: 0 for name in BIN_ANGLES}
         self._last: str | None = None
-
-
 
     @property
     def busy(self) -> bool:
@@ -205,7 +201,6 @@ class Sorter(threading.Thread):
     def total(self) -> int:
         with self._lock:
             return sum(self._sorted.values())
-
 
     def submit(self, request: SortRequest) -> bool:
         """Enqueue a request. Returns False if a cycle is already in progress."""
@@ -250,8 +245,6 @@ class Sorter(threading.Thread):
             self._queue.put(None)
 
 
-
-
 class FpsMeter:
     def __init__(self, window: int = FPS_WINDOW) -> None:
         self._window = window
@@ -270,7 +263,11 @@ class FpsMeter:
 
 
 class DetectionHandler:
-    """Converts detection results into sort requests, with per-material cooldown."""
+    """Converts detection results into sort requests, with per-material cooldown.
+
+    A single item stays in frame for many frames. Without the cooldown, each of
+    those frames queues another sort cycle for the same object.
+    """
 
     def __init__(self, sorter: Sorter) -> None:
         self._sorter = sorter
@@ -318,7 +315,6 @@ class DetectionHandler:
     def _mark_seen(self, material: str) -> None:
         with self._lock:
             self._last_seen[material] = time.monotonic()
-
 
 
 class PiCamera:
@@ -372,7 +368,6 @@ class FileCamera:
         self._cap.release()
 
 
-
 def draw_boxes(frame, result: vision.ObjectDetectorResult | None) -> None:
     if result is None:
         return
@@ -416,8 +411,6 @@ def draw_panel(frame, sorter: Sorter, fps: float) -> None:
 
     cv2.putText(frame, f"{fps:.1f} FPS", (170, 144),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.44, MUTED, 1, cv2.LINE_AA)
-
-
 
 
 def build_camera(source: str | None, width: int, height: int):
