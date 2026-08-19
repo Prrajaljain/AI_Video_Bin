@@ -39,13 +39,13 @@ TFLite object detection file whose labels match the keys in `BIN_ANGLES`.
 pip install -r requirements.txt
 
 # on the Pi
-python waste_sorter.py --model best.tflite
+python ai_video_bin.py --model best.tflite
 
 # on a laptop, from a recording
-python waste_sorter.py --model best.tflite --mock --source clip.mp4 --output demo.mp4
+python ai_video_bin.py --model best.tflite --mock --source clip.mp4 --output demo.mp4
 ```
 
 ## 📂 Repository Structure
-- `waste_sorter.py` — detection, routing queue, servo control
+- `ai_video_bin.py` — detection, routing queue, servo control
 - `requirements.txt` — dependencies
-- `demo.gif` — annotated output
+- `README.md` — documentation

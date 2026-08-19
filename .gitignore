@@ -4,9 +4,9 @@ __pycache__/
 venv/
 
 *.mp4
-!demo.mp4
 out/
 
 .vscode/
 .idea/
 .DS_Store
+
